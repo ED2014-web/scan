@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>BarcodePro - Scanner</title>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #0f172a 0%, #581c87 50%, #0f172a 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Background pattern */
+        .bg-pattern {
+            position: fixed;
+            inset: 0;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnoiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIvPjwvZz48L3N2Zz4=');
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem;
+            background: linear-gradient(90deg, rgba(30, 41, 59, 0.8) 0%, rgba(88, 28, 135, 0.8) 100%);
+            backdrop-filter: blur(10px);
+        }
+
+        .header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Home View */
+        .home-view {
+            padding: 4rem 1.5rem 6rem;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 4rem;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-icon {
+            display: inline-block;
+            padding: 1rem;
+            background: linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%);
+            border-radius: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 20px 40px rgba(34, 211, 238, 0.3);
+        }
+
+        .logo-icon svg {
+            width: 48px;
+            height: 48px;
+            stroke: white;
+            stroke-width: 2.5;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(90deg, #67e8f9 0%, #60a5fa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.75rem;
+        }
+
+        .subtitle {
+            font-size: 1.125rem;
+            color: #cbd5e1;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+        }
+
+        /* Buttons */
+        .btn-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: linear-gradient(90deg, #06b6d4 0%, #2563eb 100%);
+            color: white;
+            padding: 1.25rem 1.5rem;
+            border-radius: 1rem;
+            font-weight: 700;
+            font-size: 1.125rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 10px 25px rgba(6, 182, 212, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 35px rgba(6, 182, 212, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 1.25rem 1.5rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            font-size: 1.125rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .btn-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .badge {
+            background: #06b6d4;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 700;
+        }
+
+        .info-box {
+            margin-top: 4rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-box h3 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #67e8f9;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-box p {
+            font-size: 0.875rem;
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+
+        /* Scanner View */
+        .scanner-view {
+            padding: 1.5rem;
+        }
+
+        .scanner-container {
+            position: relative;
+            background: black;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            border: 4px solid rgba(6, 182, 212, 0.5);
+        }
+
+        #scanner-region {
+            width: 100%;
+            aspect-ratio: 1;
+        }
+
+        .scanner-loading {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.9);
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .scanner-loading.hidden {
+            display: none;
+        }
+
+        .scanner-help {
+            margin-top: 1.5rem;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Profile View */
+        .profile-view {
+            padding: 1.5rem;
+        }
+
+        .profile-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-photo {
+            width: 128px;
+            height: 128px;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            border: 4px solid #22d3ee;
+            box-shadow: 0 10px 30px rgba(34, 211, 238, 0.3);
+            object-fit: cover;
+        }
+
+        .profile-photo-placeholder {
+            width: 128px;
+            height: 128px;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            background: linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(34, 211, 238, 0.3);
+        }
+
+        .profile-name {
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .profile-code {
+            color: #67e8f9;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+
+        .history-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .history-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .history-header h4 {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .history-list {
+            max-height: 16rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .history-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22d3ee;
+            flex-shrink: 0;
+        }
+
+        .history-date {
+            font-size: 0.875rem;
+            color: #cbd5e1;
+        }
+
+        .history-footer {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .history-total {
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .history-count {
+            color: #22d3ee;
+            font-weight: 700;
+            font-size: 1.125rem;
+        }
+
+        /* Register View */
+        .register-view {
+            padding: 1.5rem;
+        }
+
+        .alert-box {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 1rem;
+            padding: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-icon {
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .alert-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #67e8f9;
+            margin-bottom: 0.25rem;
+        }
+
+        .alert-text {
+            font-size: 0.75rem;
+            color: #cbd5e1;
+            font-family: 'Courier New', monospace;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #67e8f9;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.75rem;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #06b6d4;
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+        }
+
+        .camera-btn {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.75rem;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .camera-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .video-container {
+            position: relative;
+            background: black;
+            border-radius: 1rem;
+            overflow: hidden;
+            border: 2px solid rgba(6, 182, 212, 0.5);
+            margin-bottom: 0.75rem;
+        }
+
+        #camera-video {
+            width: 100%;
+            display: block;
+        }
+
+        .photo-preview {
+            border-radius: 1rem;
+            overflow: hidden;
+            border: 2px solid rgba(6, 182, 212, 0.5);
+            margin-bottom: 0.75rem;
+        }
+
+        .photo-preview img {
+            width: 100%;
+            display: block;
+        }
+
+        .retake-btn {
+            width: 100%;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 0.75rem;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .retake-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .capture-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: linear-gradient(90deg, #06b6d4 0%, #2563eb 100%);
+            border: none;
+            border-radius: 0.75rem;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(90deg, #06b6d4 0%, #2563eb 100%);
+            border: none;
+            border-radius: 1rem;
+            color: white;
+            font-weight: 700;
+            font-size: 1.125rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            box-shadow: 0 10px 25px rgba(6, 182, 212, 0.3);
+            margin-top: 1.5rem;
+        }
+
+        .submit-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 35px rgba(6, 182, 212, 0.5);
+        }
+
+        /* List View */
+        .list-view {
+            padding-bottom: 1.5rem;
+        }
+
+        .list-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .list-subtitle {
+            font-size: 0.875rem;
+            color: #cbd5e1;
+        }
+
+        .list-container {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 0;
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1rem;
+            stroke: #475569;
+        }
+
+        .empty-state p {
+            color: #94a3b8;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state button {
+            padding: 0.5rem 1.5rem;
+            background: #06b6d4;
+            border: none;
+            border-radius: 0.75rem;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .empty-state button:hover {
+            background: #0891b2;
+        }
+
+        .user-card {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.02);
+        }
+
+        .user-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 2px solid #22d3ee;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .user-avatar-placeholder {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            flex: 1;
+            text-align: left;
+        }
+
+        .user-name {
+            font-weight: 700;
+            font-size: 1.125rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .user-barcode {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            font-family: 'Courier New', monospace;
+        }
+
+        .user-scans {
+            font-size: 0.75rem;
+            color: #67e8f9;
+            margin-top: 0.25rem;
+        }
+
+        .user-arrow {
+            flex-shrink: 0;
+            color: #94a3b8;
+        }
+
+        /* Icons */
+        .icon {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .icon-lg {
+            width: 28px;
+            height: 28px;
+        }
+
+        canvas {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+    <div class="container">
+        <div class="content">
+            <!-- Home View -->
+            <div id="home-view" class="home-view">
+                <div class="logo-container">
+                    <div class="logo-icon">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2z"></path>
+                            <path d="M3 7l9 6 9-6"></path>
+                        </svg>
+                    </div>
+                    <h1>BarcodePro</h1>
+                    <p class="subtitle">Gestion intelligente de codes-barres</p>
+                </div>
+
+                <div class="btn-container">
+                    <button class="btn-primary" onclick="showScanner()">
+                        <div class="btn-left">
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"></path>
+                                <circle cx="12" cy="13" r="4"></circle>
+                            </svg>
+                            <span>Scanner un code</span>
+                        </div>
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+
+                    <button class="btn-secondary" onclick="showList()">
+                        <div class="btn-left">
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 00-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 010 7.75"></path>
+                            </svg>
+                            <span>Liste des codes</span>
+                        </div>
+                        <span class="badge" id="user-count">0</span>
+                    </button>
+                </div>
+
+                <div class="info-box">
+                    <h3>Info</h3>
+                    <p>Scannez un code-barres pour afficher ou créer une fiche utilisateur avec photo et historique.</p>
+                </div>
+            </div>
+
+            <!-- Scanner View -->
+            <div id="scanner-view" class="hidden">
+                <div class="header">
+                    <h2>Scanner</h2>
+                    <button class="close-btn" onclick="closeScanner()">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="scanner-view">
+                    <div class="scanner-container">
+                        <div id="scanner-region"></div>
+                        <div id="scanner-loading" class="scanner-loading">
+                            <svg class="icon icon-lg pulse" viewBox="0 0 24 24" style="color: #22d3ee;">
+                                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"></path>
+                                <circle cx="12" cy="13" r="4"></circle>
+                            </svg>
+                            <p style="color: #cbd5e1;">Initialisation du scanner...</p>
+                        </div>
+                    </div>
+                    <p class="scanner-help">Placez le code-barres dans le cadre</p>
+                </div>
+            </div>
+
+            <!-- Profile View -->
+            <div id="profile-view" class="hidden">
+                <div class="header">
+                    <h2>Profil</h2>
+                    <button class="close-btn" onclick="closeProfile()">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="profile-view">
+                    <div class="profile-card">
+                        <div id="profile-photo-container"></div>
+                        <h3 class="profile-name" id="profile-name"></h3>
+                        <p class="profile-code" id="profile-code"></p>
+                    </div>
+
+                    <div class="history-card">
+                        <div class="history-header">
+                            <svg class="icon" viewBox="0 0 24 24" style="color: #22d3ee;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <h4>Historique des scans</h4>
+                        </div>
+                        <div class="history-list" id="history-list"></div>
+                        <div class="history-footer">
+                            <p class="history-total">
+                                Total: <span class="history-count" id="scan-count">0</span> scan(s)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Register View -->
+            <div id="register-view" class="hidden">
+                <div class="header">
+                    <h2>Nouvelle fiche</h2>
+                    <button class="close-btn" onclick="closeRegister()">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="register-view">
+                    <div class="alert-box">
+                        <svg class="icon alert-icon" viewBox="0 0 24 24" style="color: #22d3ee;">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        <div>
+                            <p class="alert-title">Nouveau code détecté</p>
+                            <p class="alert-text" id="new-barcode-text"></p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Prénom</label>
+                        <input type="text" id="input-prenom" class="form-input" placeholder="Entrez le prénom">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Nom</label>
+                        <input type="text" id="input-nom" class="form-input" placeholder="Entrez le nom">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Photo</label>
+                        <div id="camera-controls">
+                            <button class="camera-btn" onclick="startCamera()">
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"></path>
+                                    <circle cx="12" cy="13" r="4"></circle>
+                                </svg>
+                                Prendre une photo
+                            </button>
+                        </div>
+
+                        <div id="video-controls" class="hidden">
+                            <div class="video-container">
+                                <video id="camera-video" autoplay playsinline></video>
+                            </div>
+                            <button class="capture-btn" onclick="takePhoto()">
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"></path>
+                                    <circle cx="12" cy="13" r="4"></circle>
+                                </svg>
+                                Capturer
+                            </button>
+                        </div>
+
+                        <div id="photo-preview" class="hidden">
+                            <div class="photo-preview">
+                                <img id="preview-image" src="" alt="Photo preview">
+                            </div>
+                            <button class="retake-btn" onclick="retakePhoto()">Reprendre la photo</button>
+                        </div>
+
+                        <canvas id="photo-canvas"></canvas>
+                    </div>
+
+                    <button class="submit-btn" onclick="handleRegister()">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Enregistrer
+                    </button>
+                </div>
+            </div>
+
+            <!-- List View -->
+            <div id="list-view" class="hidden">
+                <div class="header list-header">
+                    <div>
+                        <h2>Liste des codes</h2>
+                        <p class="list-subtitle"><span id="list-count">0</span> personne(s)</p>
+                    </div>
+                    <button class="close-btn" onclick="closeList()">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="list-container" id="users-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Storage utilities
+        const storage = {
+            getUsers: () => {
+                const data = localStorage.getItem('barcodeUsers');
+                return data ? JSON.parse(data) : {};
+            },
+            saveUsers: (users) => {
+                localStorage.setItem('barcodeUsers', JSON.stringify(users));
+            }
+        };
+
+        // Global state
+        let users = storage.getUsers();
+        let currentBarcode = null;
+        let currentUser = null;
+        let cameraStream = null;
+        let photoData = null;
+        let scanner = null;
+
+        // Initialize
+        updateUserCount();
+
+        // Navigation functions
+        function showView(viewId) {
+            document.querySelectorAll('.home-view, #scanner-view, #profile-view, #register-view, #list-view').forEach(el => {
+                el.classList.add('hidden');
+            });
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        function showHome() {
+            showView('home-view');
+        }
+
+        function showScanner() {
+            showView('scanner-view');
+            initScanner();
+        }
+
+        function showList() {
+            showView('list-view');
+            renderUsersList();
+        }
+
+        function closeScanner() {
+            stopScanner();
+            showHome();
+        }
+
+        function closeProfile() {
+            currentUser = null;
+            currentBarcode = null;
+            showHome();
+        }
+
+        function closeRegister() {
+            currentBarcode = null;
+            photoData = null;
+            document.getElementById('input-prenom').value = '';
+            document.getElementById('input-nom').value = '';
+            resetCameraUI();
+            showHome();
+        }
+
+        function closeList() {
+            showHome();
+        }
+
+        // Scanner functions
+        async function initScanner() {
+            try {
+                document.getElementById('scanner-loading').classList.remove('hidden');
+                
+                if (scanner) {
+                    await scanner.stop();
+                }
+
+                scanner = new Html5Qrcode("scanner-region");
+
+                await scanner.start(
+                    { facingMode: "environment" },
+                    {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 }
+                    },
+                    handleScan,
+                    () => {} // Ignore errors
+                );
+
+                document.getElementById('scanner-loading').classList.add('hidden');
+            } catch (error) {
+                console.error('Scanner error:', error);
+                alert('Erreur lors de l\'initialisation du scanner. Vérifiez les permissions de la caméra.');
+            }
+        }
+
+        async function stopScanner() {
+            if (scanner) {
+                try {
+                    await scanner.stop();
+                } catch (error) {
+                    console.error('Error stopping scanner:', error);
+                }
+            }
+        }
+
+        function handleScan(barcode) {
+            stopScanner();
+            currentBarcode = barcode;
+
+            if (users[barcode]) {
+                // User exists
+                const user = users[barcode];
+                const updatedUser = {
+                    ...user,
+                    scans: [...(user.scans || []), new Date().toISOString()]
+                };
+
+                users[barcode] = updatedUser;
+                storage.saveUsers(users);
+                currentUser = updatedUser;
+                
+                showProfile();
+            } else {
+                // New user
+                showRegisterForm();
+            }
+        }
+
+        // Profile functions
+        function showProfile() {
+            showView('profile-view');
+            
+            const photoContainer = document.getElementById('profile-photo-container');
+            if (currentUser.photo) {
+                photoContainer.innerHTML = `<img src="${currentUser.photo}" alt="Photo" class="profile-photo">`;
+            } else {
+                photoContainer.innerHTML = `
+                    <div class="profile-photo-placeholder">
+                        <svg class="icon" viewBox="0 0 24 24" style="width: 48px; height: 48px;">
+                            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 00-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 010 7.75"></path>
+                        </svg>
+                    </div>
+                `;
+            }
+
+            document.getElementById('profile-name').textContent = `${currentUser.prenom} ${currentUser.nom}`;
+            document.getElementById('profile-code').textContent = `Code: ${currentBarcode}`;
+
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = '';
+            
+            currentUser.scans.slice().reverse().forEach(scan => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <div class="history-dot"></div>
+                    <span class="history-date">${formatDate(scan)}</span>
+                `;
+                historyList.appendChild(item);
+            });
+
+            document.getElementById('scan-count').textContent = currentUser.scans.length;
+        }
+
+        // Register functions
+        function showRegisterForm() {
+            showView('register-view');
+            document.getElementById('new-barcode-text').textContent = currentBarcode;
+        }
+
+        async function startCamera() {
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'user' } 
+                });
+                document.getElementById('camera-video').srcObject = cameraStream;
+                
+                document.getElementById('camera-controls').classList.add('hidden');
+                document.getElementById('video-controls').classList.remove('hidden');
+            } catch (error) {
+                alert('Impossible d\'accéder à la caméra');
+            }
+        }
+
+        function takePhoto() {
+            const video = document.getElementById('camera-video');
+            const canvas = document.getElementById('photo-canvas');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            photoData = canvas.toDataURL('image/jpeg', 0.8);
+            
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+
+            document.getElementById('preview-image').src = photoData;
+            document.getElementById('video-controls').classList.add('hidden');
+            document.getElementById('photo-preview').classList.remove('hidden');
+        }
+
+        function retakePhoto() {
+            photoData = null;
+            document.getElementById('photo-preview').classList.add('hidden');
+            startCamera();
+        }
+
+        function resetCameraUI() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+            document.getElementById('camera-controls').classList.remove('hidden');
+            document.getElementById('video-controls').classList.add('hidden');
+            document.getElementById('photo-preview').classList.add('hidden');
+        }
+
+        function handleRegister() {
+            const prenom = document.getElementById('input-prenom').value.trim();
+            const nom = document.getElementById('input-nom').value.trim();
+
+            if (!prenom || !nom) {
+                alert('Veuillez remplir tous les champs');
+                return;
+            }
+
+            const newUser = {
+                nom,
+                prenom,
+                photo: photoData || '',
+                scans: [new Date().toISOString()]
+            };
+
+            users[currentBarcode] = newUser;
+            storage.saveUsers(users);
+            currentUser = newUser;
+
+            document.getElementById('input-prenom').value = '';
+            document.getElementById('input-nom').value = '';
+            photoData = null;
+            resetCameraUI();
+
+            updateUserCount();
+            showProfile();
+        }
+
+        // List functions
+        function renderUsersList() {
+            const container = document.getElementById('users-list');
+            const usersList = Object.entries(users);
+
+            document.getElementById('list-count').textContent = usersList.length;
+
+            if (usersList.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 00-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 010 7.75"></path>
+                        </svg>
+                        <p>Aucun code enregistré</p>
+                        <button onclick="closeList(); showScanner();">Scanner un code</button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            usersList.forEach(([barcode, user]) => {
+                const card = document.createElement('button');
+                card.className = 'user-card';
+                card.onclick = () => {
+                    currentBarcode = barcode;
+                    currentUser = user;
+                    showProfile();
+                };
+
+                const avatarHTML = user.photo 
+                    ? `<img src="${user.photo}" alt="Photo" class="user-avatar">`
+                    : `<div class="user-avatar-placeholder">
+                         <svg class="icon icon-lg" viewBox="0 0 24 24">
+                           <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path>
+                           <circle cx="9" cy="7" r="4"></circle>
+                           <path d="M23 21v-2a4 4 0 00-3-3.87"></path>
+                           <path d="M16 3.13a4 4 0 010 7.75"></path>
+                         </svg>
+                       </div>`;
+
+                card.innerHTML = `
+                    ${avatarHTML}
+                    <div class="user-info">
+                        <h3 class="user-name">${user.prenom} ${user.nom}</h3>
+                        <p class="user-barcode">${barcode}</p>
+                        <p class="user-scans">${user.scans.length} scan(s)</p>
+                    </div>
+                    <svg class="icon user-arrow" viewBox="0 0 24 24">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // Utility functions
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function updateUserCount() {
+            document.getElementById('user-count').textContent = Object.keys(users).length;
+        }
+    </script>
+</body>
+</html>
