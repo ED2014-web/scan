@@ -72,26 +72,28 @@ async function initScanner() {
         document.getElementById('scanner-loading').classList.remove('hidden');
         
         if (scanner) {
-            await scanner.stop();
+            try {
+                await scanner.stop();
+            } catch (e) {
+                // Ignorer erreur si déjà arrêté
+            }
         }
 
         scanner = new Html5Qrcode("scanner-region");
 
         // Configuration optimisée pour codes-barres
         const config = {
-            fps: 30, // Augmentation du FPS pour une meilleure détection
+            fps: 30,
             qrbox: function(viewfinderWidth, viewfinderHeight) {
-                // Zone de scan plus large (90% de la zone visible)
                 let minEdge = Math.min(viewfinderWidth, viewfinderHeight);
                 let qrboxSize = Math.floor(minEdge * 0.9);
                 return {
                     width: qrboxSize,
-                    height: Math.floor(qrboxSize * 0.6) // Format adapté aux codes-barres
+                    height: Math.floor(qrboxSize * 0.6)
                 };
             },
             aspectRatio: 1.0,
             disableFlip: false,
-            // Formats de codes-barres supportés
             formatsToSupport: [
                 Html5QrcodeSupportedFormats.QR_CODE,
                 Html5QrcodeSupportedFormats.EAN_13,
@@ -105,23 +107,53 @@ async function initScanner() {
             ]
         };
 
-        await scanner.start(
-            { 
-                facingMode: "environment",
-                // Demander la meilleure résolution possible
-                advanced: [
-                    { zoom: 2.0 } // Zoom pour mieux lire de loin
-                ]
-            },
-            config,
-            handleScan,
-            () => {} // Ignore errors
-        );
+        // Essayer d'abord avec les contraintes de base
+        try {
+            await scanner.start(
+                { facingMode: "environment" },
+                config,
+                handleScan,
+                () => {}
+            );
+        } catch (basicError) {
+            // Si ça échoue, essayer sans contraintes avancées
+            console.log('Tentative avec configuration simplifiée...');
+            await scanner.start(
+                "environment",
+                config,
+                handleScan,
+                () => {}
+            );
+        }
 
         document.getElementById('scanner-loading').classList.add('hidden');
     } catch (error) {
         console.error('Scanner error:', error);
-        alert('Erreur lors de l\'initialisation du scanner. Vérifiez les permissions de la caméra.');
+        document.getElementById('scanner-loading').classList.add('hidden');
+        
+        // Message d'erreur détaillé selon le type d'erreur
+        let errorMessage = 'Erreur du scanner:\n\n';
+        
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+            errorMessage += '❌ Permission refusée\n\n';
+            errorMessage += '📱 Sur iPhone:\n';
+            errorMessage += '1. Allez dans Réglages\n';
+            errorMessage += '2. Safari → Caméra\n';
+            errorMessage += '3. Choisissez "Autoriser"\n\n';
+            errorMessage += 'Puis rechargez la page.';
+        } else if (error.name === 'NotFoundError') {
+            errorMessage += '❌ Caméra non trouvée\n\n';
+            errorMessage += 'Vérifiez que votre appareil possède une caméra.';
+        } else if (error.name === 'NotReadableError') {
+            errorMessage += '❌ Caméra déjà utilisée\n\n';
+            errorMessage += 'Fermez les autres apps utilisant la caméra.';
+        } else {
+            errorMessage += error.message || 'Erreur inconnue';
+            errorMessage += '\n\nVérifiez les permissions dans Réglages → Safari → Caméra';
+        }
+        
+        alert(errorMessage);
+        showHome();
     }
 }
 
